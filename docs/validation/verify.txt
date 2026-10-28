@@ -1,0 +1,79 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> dividimos-offline@1.0.0 verify
+> npm test && npm run test:api && npm run build && npm run demo:api
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> dividimos-offline@1.0.0 test
+> vitest run
+
+
+ RUN  v4.1.12 /workspace/scratch/9e6525fe7a12/dividimos-offline
+
+
+ Test Files  2 passed (2)
+      Tests  8 passed (8)
+   Start at  21:16:54
+   Duration  851ms (transform 55ms, setup 0ms, import 87ms, tests 10ms, environment 1.26s)
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> dividimos-offline@1.0.0 test:api
+> node --test server/*.test.cjs
+
+✔ GET /health returns healthy status (27.152412ms)
+✔ API rejects unauthenticated calls (3.1167ms)
+✔ API refuses untrusted Origin (2.809679ms)
+✔ PUT + GET state persists finance data (11.536032ms)
+✔ GET /api/summary counts persons and expenses (7.615936ms)
+✔ Reject unknown state keys (0.706932ms)
+✔ Reject non-string state values (0.188242ms)
+✔ SQLite data survives close and reopen (7.799942ms)
+✔ Malformed JSON does not change stored data (3.711673ms)
+✔ Oversize payload is rejected without changing data (15.839755ms)
+✔ UTF-8 split across HTTP chunks is preserved (28.214427ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 208.912712
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> dividimos-offline@1.0.0 build
+> vite build
+
+vite v8.3.5 building client environment for production...
+transforming...
+✓ 585 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                           3.42 kB │ gzip:   0.66 kB
+dist/assets/material-symbols-outlined-Bn5lkljl.woff2  4,001.80 kB
+dist/assets/index-Efj9Ibl_.css                            1.46 kB │ gzip:   0.71 kB
+dist/assets/index-B93w1yA5.js                           633.45 kB │ gzip: 189.42 kB
+
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 292ms
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> dividimos-offline@1.0.0 demo:api
+> node scripts/demo-api.cjs
+
+Health: { status: 'ok', database: 'sqlite', mode: 'offline' } 
+State: {} 
+Summary: {
+  pessoas: 0,
+  gastos: 0,
+  contas: 0,
+  persistencia: 'sqlite',
+  offline: true
+}
+Demonstração da API autenticada concluida. Banco temporario eliminado.

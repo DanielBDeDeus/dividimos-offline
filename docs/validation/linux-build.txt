@@ -1,0 +1,14 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+  • electron-builder  version=26.18.0 os=6.18.55
+  • loaded configuration  file=/workspace/scratch/9e6525fe7a12/dividimos-offline/electron-builder.yml
+  • author is missed in the package.json  appPackageFile=/workspace/scratch/9e6525fe7a12/dividimos-offline/package.json
+  • skipped dependencies rebuild  reason=npmRebuild is set to false
+  • packaging       platform=linux arch=x64 electron=45.1.0 appOutDir=release/linux-unpacked
+  • downloaded      label=electron progress=100%
+  • downloaded electron zip extracted successfully  output=/workspace/scratch/9e6525fe7a12/dividimos-offline/release/linux-unpacked
+  • searching for node modules  pm=npm searchDir=/workspace/scratch/9e6525fe7a12/dividimos-offline
+  • duplicate dependency references  dependencies=["react-dom@19.2.5","prop-types@15.8.1","react-dom@19.2.5","react-resizable@3.1.3","prop-types@15.8.1","react-dom@19.2.5","react-draggable@4.5.0","react-dom@19.2.5","react-dom@19.2.5","react-redux@9.2.0","react-dom@19.2.5","d3-array@3.2.4","d3-interpolate@3.0.1","d3-time@3.1.0","d3-time@3.1.0","d3-array@3.2.4"]
+  • building        target=AppImage arch=x64 file=release/DividimOS-1.0.0-x86_64.AppImage
+  • electron uses desktopName as app_id / WM_CLASS for window association. Without it desktop environments may not link running windows to this .desktop entry. Set desktopName in package.json and linux.syncDesktopName: true to fix.  reason=desktopName is not set in package.json docs=https://www.electron.build/linux#window-association-desktopname--syncdesktopname
+  • default Electron icon is used  reason=application icon is not set
+  • building embedded block map  file=release/DividimOS-1.0.0-x86_64.AppImage

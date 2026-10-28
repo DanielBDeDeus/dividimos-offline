@@ -1,34 +1,47 @@
-﻿name: CI
-
+name: CI - DividimOS Offline
 on:
   push:
-    branches:
-      - main
-      - master
+    branches: [main, 'feat/**', 'fix/**', 'demo/**']
   pull_request:
-    branches:
-      - main
-      - master
-
+    branches: [main]
+permissions:
+  contents: read
 jobs:
-  test-and-build:
+  test:
     runs-on: ubuntu-latest
-
+    timeout-minutes: 20
     steps:
-      - name: Baixar repositório
-        uses: actions/checkout@v4
-
-      - name: Configurar Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '24'
           cache: npm
-
-      - name: Instalar dependências
+      - name: Install dependencies reproducibly
         run: npm ci
-
-      - name: Rodar testes automatizados
+      - name: Unit tests (Vitest)
         run: npm test
-
-      - name: Gerar build de produção
+      - name: API + SQLite tests
+        run: npm run test:api
+      - name: Production build
         run: npm run build
+      - name: Upload versioned frontend build
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-${{ github.sha }}
+          path: dist/
+          if-no-files-found: error
+      - name: Trivy vulnerability scan (report-only)
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: table
+          output: trivy-report.txt
+          severity: CRITICAL,HIGH
+          exit-code: '0'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trivy-security-report
+          path: trivy-report.txt
+          if-no-files-found: ignore
