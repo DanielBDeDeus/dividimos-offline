@@ -9,10 +9,12 @@ const { spawnSync } = require('node:child_process');
 const root = path.resolve(__dirname, '..');
 if (!process.versions.electron) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dividimos-desktop-test-'));
+  const childEnv = { ...process.env };
+  delete childEnv.ELECTRON_RUN_AS_NODE;
   try {
     for (const phase of ['write', 'read']) {
       const result = spawnSync(require('electron'), [__filename, dir, phase], {
-        cwd: root, env: { ...process.env, ELECTRON_RUN_AS_NODE: '' },
+        cwd: root, env: childEnv,
         stdio: 'inherit', timeout: 90000,
       });
       if (result.error) throw result.error;
