@@ -1,29 +1,29 @@
-# Evidencias - Projeto Final Integração DevOps
+# Evidências reais — DividimOS Offline
 
-> PREENCHER SOMENTE COM LINKS/PRINTS REAIS. Nenhum resultado está sendo declarado aqui.
+Integrante 1: Daniel Barros de Deus. Integrante 2: PENDENTE (participação real obrigatória).
 
-Projeto: DividimOS Offline. Integrante 1: [SEU NOME]. Integrante 2: [COLEGA].
+- Repositório: https://github.com/DanielBDeDeus/dividimos-offline
+- PR da implementação: https://github.com/DanielBDeDeus/dividimos-offline/pull/1
+- CI vermelha real: https://github.com/DanielBDeDeus/dividimos-offline/actions/runs/40687726038
+  - Causa verificada no log: `aquasecurity/trivy-action@0.33.1` não existia; job falhou no setup, antes dos testes.
+  - Correção: commit `40195b5938591db7d5290c520af750151dbc5a0f` fixa versão verificada v0.36.0 pelo SHA.
+- CI verde após correção: https://github.com/DanielBDeDeus/dividimos-offline/actions/runs/40905318178
+  - Testes Vitest, API/SQLite, build e scan Trivy executados com sucesso.
+  - Relatório Trivy é artefato da execução; scan report-only não bloqueia por vulnerabilidade.
+- Build Windows real: https://github.com/DanielBDeDeus/dividimos-offline/actions/runs/40687726101
+- Teste Electron vermelho real: https://github.com/DanielBDeDeus/dividimos-offline/actions/runs/40905978541
+  - Causa: variável ELECTRON_RUN_AS_NODE presente, mesmo vazia, iniciava Electron em modo Node.
+  - Correção: remover a variável do ambiente do processo de teste, commit `3180297a6d23d63ca74e095b69715f72f0b37077`.
 
-- Repositorio final: [URL]
-- PR de integrante 1: [URL]
-- PR de integrante 2: [URL]
-- Pipeline com falha controlada: [URL]; causa: saldo esperado -999 em vez de 50.
-- Pipeline corrigido: [URL]
-- Relatorio automatizado de seguranca Trivy: [URL]
-- GitHub Release Windows/Linux: [URL]
-- Artefato: DividimOS-1.0.0-Portable.exe / DividimOS-1.0.0-x86_64.AppImage
-- API /health: [print real]
-- Testes automaticos: [print real]
-- Execucao offline e persistencia apos restart: [prints reais]
-- Rollback: [exemplo real com duas versoes]
+Esses erros são falhas reais, não são apresentados como a regressão controlada exigida para demonstrar uma regra financeira incorreta.
 
-## Estrategia
+- Teste Electron Windows aprovado: https://github.com/DanielBDeDeus/dividimos-offline/actions/runs/40906283706 (startup, persistência, backup com seletores simulados e bloqueio de rede externa).
 
-GitHub Flow; testes por PR; build e security scan na CI; release por tag `vX.Y.Z`;
-implantacao local ao abrir o executavel; dados salvos fora da pasta do executavel;
-rollback substituindo o executavel com backup previa para mudancas de esquema.
+## Pendente
 
-## Checklist para Moodle
-
-Ambos os alunos devem enviar os mesmos arquivos/links individualmente: GitHub, evidencias PDF,
-links runs verde/vermelho, local do executavel e slides (se usados).
+- Release pública aprovada, versão final e download testado.
+- Execução do EXE no Windows sem admin e AppImage no Bazzite; rede fisicamente desconectada.
+- Teste manual dos seletores de backup e atualização/rollback.
+- PR/revisão/contribuições do segundo estudante.
+- Demonstração controlada de teste financeiro vermelho/verde, PDF e apresentação.
+- Duas submissões individuais no Moodle.

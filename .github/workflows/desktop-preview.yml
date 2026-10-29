@@ -1,4 +1,4 @@
-name: Windows portable preview
+name: Desktop portable preview
 on:
   workflow_dispatch:
   push:
@@ -6,8 +6,16 @@ on:
 permissions:
   contents: read
 jobs:
-  windows:
-    runs-on: windows-latest
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: win
+          - os: ubuntu-latest
+            target: linux
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
@@ -18,12 +26,48 @@ jobs:
       - run: npm ci
       - run: npm run verify
       - name: Electron persistence and backup smoke test
+        if: runner.os == 'Windows'
         run: npm run test:desktop
-      - run: npm run dist:win
+      - name: Package portable application
+        run: npx electron-builder --${{ matrix.target }} --x64 --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
       - uses: actions/upload-artifact@v4
         with:
-          name: DividimOS-Windows-${{ github.sha }}
-          path: release/*.exe
+          name: DividimOS-${{ matrix.target }}-${{ github.sha }}
+          path: |
+            release/*.exe
+            release/*.AppImage
           if-no-files-found: error
+  candidate:
+    # Drafts are prepared only on an explicit candidate commit or manual run.
+    # Nothing is published publicly by this job.
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[candidate]')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: DividimOS-*
+          path: artifacts
+          merge-multiple: true
+      - name: Hash downloadable files
+        working-directory: artifacts
+        run: sha256sum *.exe *.AppImage > SHA256SUMS.txt
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: preview-${{ github.sha }}
+          target_commitish: ${{ github.sha }}
+          name: DividimOS Offline — candidate ${{ github.run_number }}
+          draft: true
+          prerelease: true
+          files: artifacts/*
+          fail_on_unmatched_files: true
+          body: |
+            Windows x64 portable EXE and Linux x64 AppImage built by GitHub Actions.
+            Includes SHA256SUMS.txt. No installer or separately installed Node.js is needed.
+            Unit/API tests, frontend build and Windows Electron persistence/backup smoke tests must pass before this draft is created.
+            The smoke test stubs native file pickers and blocks renderer external requests; it does not replace physical offline and manual target-OS testing.
+            Unsigned preview. Manual Windows/Bazzite checks and second-student review remain pending. Publication requires review of this draft.

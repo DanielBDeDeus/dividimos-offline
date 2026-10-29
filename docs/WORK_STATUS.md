@@ -1,9 +1,10 @@
-# DividimOS Offline — verified work status (2026-10-28)
+# DividimOS Offline — verified work status (2026-10-29)
 
 Source: DanielBDeDeus/controle-financeiro at bfd1f2a94b96862a0292ac6f6d160a7b436d5791.
 Original remote has not been modified. Local upstream push URL is disabled.
 
 ## Verified
+- Real Windows Electron smoke passed in run https://github.com/DanielBDeDeus/dividimos-offline/actions/runs/40906283706: renderer startup, isolated preload, localStorage-to-SQLite IPC, reload, export/import/cancel, malformed import rejection, process restart; external renderer requests blocked. Native dialogs are stubbed, so this is not manual dialog or actual portable-wrapper verification.
 - Clean npm ci completed before dependency remediation; npm install/update remediated audit findings afterward.
 - Current npm run verify passes: 8 Vitest tests, 11 API/storage tests, Vite production build, authenticated API demo.
 - API tests also passed in Electron 45.1.0's embedded Node/SQLite runtime before dependency updates (server code unchanged).
@@ -21,9 +22,9 @@ Original remote has not been modified. Local upstream push URL is disabled.
 - Add Windows preview workflow and versioned CI frontend artifact; release tag must match package version.
 
 ## Pending, not claimed
-- GUI launch, actual Windows execution without admin, physical offline test, backup dialogs, updates/rollback.
+- Manual portable-EXE execution without admin, physical offline test, native backup dialogs, updates/rollback.
 - This container blocks Electron Unix sockets. A headless launch attempt failed; security flags used only for a disposable diagnostic, never embedded in the release.
-- New remote repository, PRs, GitHub Actions runs and published release. Connector cannot create a repository; browser login was rejected.
+- Public release remains pending. Repository and draft PR #1 now exist; CI and Trivy pass after fixing the invalid Trivy tag. A draft release candidate is prepared by the desktop preview workflow.
 - Real second student's identity/contributions and final academic evidence/slides.
 
 The Windows file is an unsigned portable preview; it does not install Node or require an installer. School execution policies may still block it.

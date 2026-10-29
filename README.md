@@ -12,6 +12,16 @@ O código original foi mantido como base; as novas funcionalidades estão na bra
 - Exportação/importação de backup JSON na barra inferior direita.
 - Não há sincronização entre dois computadores offline.
 
+## Participantes e situação
+
+- Daniel Barros de Deus — GitHub: DanielBDeDeus.
+- Segundo integrante: **PENDENTE** (nome, contribuições e revisão reais).
+- [PR da implementação offline](https://github.com/DanielBDeDeus/dividimos-offline/pull/1).
+- [CI com falha real](https://github.com/DanielBDeDeus/dividimos-offline/actions/runs/40687726038): tag inexistente do Trivy impedia iniciar o job.
+- [CI corrigida, testes/build/Trivy aprovados](https://github.com/DanielBDeDeus/dividimos-offline/actions/runs/40905318178).
+- [Primeiro build Windows aprovado](https://github.com/DanielBDeDeus/dividimos-offline/actions/runs/40687726101).
+- A falha de configuração acima não é apresentada como regressão controlada de teste.
+
 ## Ambiente para desenvolvimento
 
 Requer git, Node.js 24+, npm, Python 3 (somente no setup). Para usuários do release: nenhum deles.
@@ -23,6 +33,7 @@ npm run test:api
 npm run build
 npm run desktop
 npm run demo:api
+npm run test:desktop # requer sessão gráfica; CI executa no Windows
 ```
 
 ## Endpoints REST
@@ -41,6 +52,7 @@ O script `npm run demo:api` demonstra os endpoints sem expor token permanente.
 
 - `.github/workflows/ci.yml` executa testes Vitest, testes de API/SQLite, build de React e Trivy em pushes e PRs.
 - O scan Trivy é informativo (não bloqueia CI); falhas de teste bloqueiam o build.
+- `.github/workflows/desktop-preview.yml` gera EXE/AppImage na branch de desenvolvimento; commits com `[candidate]` preparam um **rascunho** de release, sem publicação automática.
 - `.github/workflows/release.yml` compila dois sistemas em runners separados e publica o GitHub Release em tags `v*`.
 - Os executáveis são artefatos de entrega; usuários fazem deployment ao executar.
 - Rollback: substituir pelo executável da tag anterior (o banco local permanece), com backup e migração segura de esquema.
@@ -78,8 +90,7 @@ Não é feito upload automático pela etapa de setup. A release depende do repos
 
 Testar o AppImage em Fedora/Bazzite e o Portable no Windows antes da entrega.
 Sem serviço de rede não há sincronização entre computadores. O app não migra automaticamente
-registros da antiga URL do Vercel ou do Supabase; exporte/importante esses dados manualmente
-caso ainda os tenha. O suporte `node:sqlite` depende da versão embutida do Electron.
+registros da antiga URL do Vercel ou do Supabase; recupere primeiro uma cópia desses dados e converta-a para o formato de backup suportado; não importe JSON arbitrário. O suporte `node:sqlite` depende da versão embutida do Electron.
 
 ## PDF de evidencias gerado a partir de dados REAIS
 
