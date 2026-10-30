@@ -34,8 +34,8 @@ describe("funções financeiras", () => {
 });
 
 // BEGIN CLASSROOM CI REGRESSION DEMO
-// Deliberately wrong expectation for the required red/green CI demonstration.
+// Correct expectation after the deliberately failing CI run was recorded.
 it('reproducao controlada - saldo matematico', () => {
-  expect(calcularSaldoDisponivel(100, 20, 30)).toBe(-999);
+  expect(calcularSaldoDisponivel(100, 20, 30)).toBe(50);
 });
 // END CLASSROOM CI REGRESSION DEMO
