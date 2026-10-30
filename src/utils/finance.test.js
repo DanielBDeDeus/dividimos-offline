@@ -32,3 +32,10 @@ describe("funções financeiras", () => {
     expect(obterAnoMes("2026-04-06")).toBe("2026-04");
   });
 });
+
+// BEGIN CLASSROOM CI REGRESSION DEMO
+// Deliberately wrong expectation for the required red/green CI demonstration.
+it('reproducao controlada - saldo matematico', () => {
+  expect(calcularSaldoDisponivel(100, 20, 30)).toBe(-999);
+});
+// END CLASSROOM CI REGRESSION DEMO
