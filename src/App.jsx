@@ -570,29 +570,10 @@ const [layout, setLayout] = useState([
 // ╚══════════════════════════════════════════════╝
 
 useEffect(() => {
-  async function carregarCotacaoDolar() {
-    try {
-      setErroCotacao("");
-
-      const response = await fetch(
-        "https://economia.awesomeapi.com.br/json/last/USD-BRL"
-      );
-
-      if (!response.ok) {
-        throw new Error("Falha ao carregar cotação");
-      }
-
-      const data = await response.json();
-
-      setCotacaoDolar(Number(data.USDBRL.bid));
-    } catch (error) {
-      console.error(error);
-
-      setErroCotacao("Erro ao carregar cotação");
-    }
-  }
-
-  carregarCotacaoDolar();
+  // Offline desktop: no external exchange-rate API.
+  // The dashboard explicitly indicates that a live quotation is unavailable.
+  setCotacaoDolar(null);
+  setErroCotacao('Cotacao online indisponivel no modo offline');
 }, []);
 
   useEffect(() => {
