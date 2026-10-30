@@ -1,29 +1,35 @@
 # Evidências reais — DividimOS Offline
 
-Integrante 1: Daniel Barros de Deus. Integrante 2: PENDENTE (participação real obrigatória).
+Integrante 1: Daniel Barros de Deus. Integrante 2: PENDENTE (nome, contribuição e revisão reais).
 
+## Código e colaboração
 - Repositório: https://github.com/DanielBDeDeus/dividimos-offline
-- PR da implementação: https://github.com/DanielBDeDeus/dividimos-offline/pull/1
-- CI vermelha real: https://github.com/DanielBDeDeus/dividimos-offline/actions/runs/40687726038
-  - Causa verificada no log: `aquasecurity/trivy-action@0.33.1` não existia; job falhou no setup, antes dos testes.
-  - Correção: commit `40195b5938591db7d5290c520af750151dbc5a0f` fixa versão verificada v0.36.0 pelo SHA.
-- CI verde após correção: https://github.com/DanielBDeDeus/dividimos-offline/actions/runs/40905318178
-  - Testes Vitest, API/SQLite, build e scan Trivy executados com sucesso.
-  - Relatório Trivy é artefato da execução; scan report-only não bloqueia por vulnerabilidade.
-- Build Windows real: https://github.com/DanielBDeDeus/dividimos-offline/actions/runs/40687726101
-- Teste Electron vermelho real: https://github.com/DanielBDeDeus/dividimos-offline/actions/runs/40905978541
-  - Causa: variável ELECTRON_RUN_AS_NODE presente, mesmo vazia, iniciava Electron em modo Node.
-  - Correção: remover a variável do ambiente do processo de teste, commit `3180297a6d23d63ca74e095b69715f72f0b37077`.
+- Implementação isolada: https://github.com/DanielBDeDeus/dividimos-offline/pull/1
+- Demonstração controlada: https://github.com/DanielBDeDeus/dividimos-offline/pull/2
+- O histórico original foi importado. Nenhum dos PRs prova participação de outro aluno.
 
-Esses erros são falhas reais, não são apresentados como a regressão controlada exigida para demonstrar uma regra financeira incorreta.
+## CI vermelha e verde — demonstração controlada concluída
+- Vermelha: https://github.com/DanielBDeDeus/dividimos-offline/actions/runs/40994472015
+- Commit vermelho: 4533eb208a84f28635ef6231c99bd7b4f0f58a5a.
+- Causa deliberada: calcularSaldoDisponivel(100, 20, 30) devolve corretamente 50, mas o teste exigia -999. Vitest: 1 falha e 8 aprovados; API/build/scan bloqueados.
+- Correção: expectativa alterada para 50 no commit 60d03fdc32374f803d573af26bf7cfd8a51300d8; cálculo de produção inalterado.
+- Verde: https://github.com/DanielBDeDeus/dividimos-offline/actions/runs/40994594705
+- Resultado: 9 Vitest + 11 API/SQLite, build e Trivy concluídos.
 
-- Teste Electron Windows aprovado: https://github.com/DanielBDeDeus/dividimos-offline/actions/runs/40906283706 (startup, persistência, backup com seletores simulados e bloqueio de rede externa).
+## Candidato de entrega
+- Código exato: 981530f32e7b3706e334feab0590198a577139db.
+- CI aprovada: https://github.com/DanielBDeDeus/dividimos-offline/actions/runs/40906674077
+- Builds Windows/Linux: https://github.com/DanielBDeDeus/dividimos-offline/actions/runs/40906663600
+- Rascunho de release (acesso do proprietário): https://github.com/DanielBDeDeus/dividimos-offline/releases/tag/untagged-ba153c9d8ebb49e8814e
+- Assets: DividimOS-1.0.0-Portable.exe (114409661 bytes), DividimOS-1.0.0-x86_64.AppImage (129859658 bytes), SHA256SUMS.txt.
+- Windows Electron: startup, isolamento do preload, persistência/reabertura, exportação/importação/cancelamento e rejeição de JSON inválido passaram. Requisições externas do renderer bloqueadas. Seletores nativos simulados: não equivale a teste manual do EXE portátil.
+- Trivy: relatório real no artefato trivy-security-report da CI; package-lock.json teve zero achados no filtro HIGH/CRITICAL. Secrets indicado como '-' (não escaneado nesse alvo); report-only não bloqueia entrega por vulnerabilidade.
 
-## Pendente
+## Falhas adicionais verificadas
+- https://github.com/DanielBDeDeus/dividimos-offline/actions/runs/40687726038: tag inexistente do Trivy impedia setup; corrigida para v0.36.0 fixada por SHA.
+- https://github.com/DanielBDeDeus/dividimos-offline/actions/runs/40905978541: configuração do teste iniciava Electron em modo Node; remoção de ELECTRON_RUN_AS_NODE corrigiu o teste.
 
-- Release pública aprovada, versão final e download testado.
-- Execução do EXE no Windows sem admin e AppImage no Bazzite; rede fisicamente desconectada.
-- Teste manual dos seletores de backup e atualização/rollback.
-- PR/revisão/contribuições do segundo estudante.
-- Demonstração controlada de teste financeiro vermelho/verde, PDF e apresentação.
-- Duas submissões individuais no Moodle.
+## Pendente — não declarar concluído
+- Aprovação/publicação da release e merge após revisão.
+- Execução do EXE sem admin e do AppImage no Bazzite; teste com rede fisicamente desligada; operações CRUD completas; seletores de backup; upgrade/rollback reais.
+- Identidade e contribuição real do segundo estudante; apresentação por ambos; duas submissões individuais no Moodle.
