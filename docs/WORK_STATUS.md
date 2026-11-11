@@ -1,3 +1,5 @@
+> Atualização 11/11/2026: aluno optou por entrega individual; aceitação pelo professor pendente. Registro abaixo preserva o estado histórico de outubro. Consulte README e relatório de novembro para a situação atual.
+
 # DividimOS Offline — verified work status (2026-10-29)
 
 Source: DanielBDeDeus/controle-financeiro at bfd1f2a94b96862a0292ac6f6d160a7b436d5791.

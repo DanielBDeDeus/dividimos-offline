@@ -47,9 +47,22 @@ function handlers() {
 async function boot() {
   const dataDir = app.getPath('userData');
   fs.mkdirSync(dataDir, { recursive: true });
+  const logDir = path.join(dataDir, 'logs');
+  fs.mkdirSync(logDir, { recursive: true, mode: 0o700 });
+  const logPath = path.join(logDir, 'application.log');
+  if (fs.existsSync(logPath) && fs.statSync(logPath).size > 1024 * 1024) {
+    fs.renameSync(logPath, logPath + '.previous');
+  }
+  const log = {
+    info(message) { fs.appendFileSync(logPath, `${new Date().toISOString()} INFO ${message}\n`, { mode: 0o600 }); },
+    error(message) { fs.appendFileSync(logPath, `${new Date().toISOString()} ERROR ${message}\n`, { mode: 0o600 }); },
+  };
   const databasePath = path.join(dataDir, 'finances.db');
-  api = createApi({ databasePath, staticDir: path.join(__dirname, '..', 'dist') });
+  api = createApi({ databasePath, staticDir: path.join(__dirname, '..', 'dist'), log });
   const origin = await api.start();
+  log.info(`v${app.getVersion()} iniciado; health=${origin}/health`);
+  app.on('before-quit', () => log.info('Encerramento solicitado'));
+  process.on('uncaughtExceptionMonitor', () => log.error('Excecao nao tratada; reinicie o aplicativo'));
   session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
   handlers();
   win = new BrowserWindow({ width: 1250, height: 840, minWidth: 960, minHeight: 600, title: 'DividimOS', show: false,

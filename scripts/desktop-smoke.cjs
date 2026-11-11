@@ -59,6 +59,8 @@ if (!process.versions.electron) {
           win.reload(); await loaded; await ready();
         }
         await ready();
+        const startupLog = fs.readFileSync(path.join(dir, 'profile', 'logs', 'application.log'), 'utf8');
+        assert.match(startupLog, /health=http:\/\/127\.0\.0\.1:\d+\/health/);
         assert.equal(await evaluate(`typeof window.require`), 'undefined');
         const key = 'controle-financeiro:pessoas';
         const expected = JSON.stringify([{ id: 123, nome: 'Teste Offline', salario: 1200, saldo: 1200, tema: 'purple' }]);

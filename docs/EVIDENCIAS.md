@@ -1,3 +1,5 @@
+> Atualização 11/11/2026: aluno optou por entrega individual; aceitação pelo professor pendente. Registro abaixo preserva o estado histórico de outubro. Consulte README e relatório de novembro para a situação atual.
+
 # Evidências reais — DividimOS Offline
 
 Integrante 1: Daniel Barros de Deus. Integrante 2: PENDENTE (nome, contribuição e revisão reais).

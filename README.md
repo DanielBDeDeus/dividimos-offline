@@ -1,105 +1,94 @@
-# DividimOS Offline — projeto final Integração DevOps
+# DividimOS Offline
 
-Versão desktop independente, derivada do repositório `controle-financeiro`.
-O código original foi mantido como base; as novas funcionalidades estão na branch `feat/offline-desktop`.
+Controle financeiro doméstico com pessoas, cartões, gastos, contas, saldos e gráficos. React + Vite no desktop Electron, API REST local em Node.js e persistência SQLite. Funciona sem serviço de nuvem após o download.
 
-## Produto
+**Aluno:** Daniel Barros de Deus · RA 22600468 · GitHub DanielBDeDeus. **Disciplina:** Integração DevOps, UniCEUB. **Entrega:** 02/12/2026 às 23h59, Brasília.
 
-- Executável Windows x64 portable e Linux x64 AppImage gerados no GitHub Actions por tag.
-- Totalmente offline após download; sem Supabase, Google Fonts ou AwesomeAPI.
-- React + Vite + Electron 45 + SQLite embutido (`node:sqlite` no Node 24 do Electron).
-- Persistência no diretório de dados do usuário, não dentro do executável.
-- Exportação/importação de backup JSON na barra inferior direita.
-- Não há sincronização entre dois computadores offline.
+**Modalidade individual declarada pelo aluno.** O enunciado exige dupla; a aceitação individual depende do professor. Não há participação de segundo estudante comprovada.
 
-## Participantes e situação
+## Baixar e executar
 
-- Daniel Barros de Deus — GitHub: DanielBDeDeus.
-- Segundo integrante: **PENDENTE** (nome, contribuições e revisão reais).
-- [PR da implementação offline](https://github.com/DanielBDeDeus/dividimos-offline/pull/1).
-- [CI com falha real](https://github.com/DanielBDeDeus/dividimos-offline/actions/runs/40687726038): tag inexistente do Trivy impedia iniciar o job.
-- [CI corrigida, testes/build/Trivy aprovados](https://github.com/DanielBDeDeus/dividimos-offline/actions/runs/40905318178).
-- [Primeiro build Windows aprovado](https://github.com/DanielBDeDeus/dividimos-offline/actions/runs/40687726101).
-- A falha de configuração acima não é apresentada como regressão controlada de teste.
+[Releases e executáveis](https://github.com/DanielBDeDeus/dividimos-offline/releases) · [Código](https://github.com/DanielBDeDeus/dividimos-offline) · [Roteiro de apresentação](docs/APRESENTACAO.md) · [Evidências](docs/EVIDENCIAS.md)
 
-## Ambiente para desenvolvimento
+- Windows x64: baixar `DividimOS-1.0.0-Portable.exe` e abrir. Não instala Node nem exige instalador. Políticas do computador podem bloquear executáveis não assinados.
+- Linux x64: baixar `DividimOS-1.0.0-x86_64.AppImage`, permitir execução nas propriedades e abrir. Requer sessão gráfica e suporte AppImage/FUSE. Alternativa: `chmod +x DividimOS-1.0.0-x86_64.AppImage && ./DividimOS-1.0.0-x86_64.AppImage --appimage-extract-and-run`.
+- Conferir o arquivo contra `SHA256SUMS.txt` da mesma release. Internet somente para baixar; nenhum serviço externo é necessário durante o uso.
+- Dados ficam no diretório de usuário do Electron (`app.getPath('userData')`), arquivo `finances.db`, separado do executável. Exportar/importar JSON pela barra de backup.
 
-Requer git, Node.js 24+, npm, Python 3 (somente no setup). Para usuários do release: nenhum deles.
+O artefato escolhido é EXE/AppImage, permitido pelo enunciado mediante justificativa: entrega diretamente o produto desktop offline, com runtime embutido, sem exigir Docker ou privilégios administrativos do usuário. Não há sincronização entre computadores nem migração automática do antigo Supabase.
+
+## Executar a partir do código e testar API
+
+Ambiente de desenvolvimento: Git, Node.js 24 e npm. Para a interface desktop, Windows/Linux x64 com sessão gráfica. Instalação reproduzível pelo lockfile:
 
 ```sh
+git clone https://github.com/DanielBDeDeus/dividimos-offline.git
+cd dividimos-offline
 npm ci
-npm test
-npm run test:api
-npm run build
+npm run verify
 npm run desktop
-npm run demo:api
-npm run test:desktop # requer sessão gráfica; CI executa no Windows
 ```
 
-## Endpoints REST
+`npm run verify` executa Vitest, testes Node API/SQLite, build Vite e demonstração REST. `npm run demo:api` usa banco temporário e dados fictícios; não altera seu banco pessoal. `npm run test:desktop` testa Electron real com perfil descartável; CI executa no Windows. `npm run dev` é somente preview web, não comprova persistência SQLite.
 
-O processo desktop inicia um servidor local na porta efêmera de `127.0.0.1`:
+| Endpoint | Função | Autorização |
+|---|---|---|
+| `GET /health` | Status da API local, modo offline e armazenamento SQLite | Público local |
+| `GET /api/state` | Ler estado financeiro | Bearer aleatório por sessão |
+| `PUT /api/state` | Gravar estado validado, limite 2 MiB | Bearer aleatório por sessão |
+| `GET /api/summary` | Contar pessoas, gastos e contas | Bearer aleatório por sessão |
 
-- `GET /health` — resposta pública `{ status: "ok", database: "sqlite", mode: "offline" }`
-- `GET /api/state` — leitura de dados, exigindo bearer token local aleatório
-- `PUT /api/state` — atualiza estado financeiro validado (token requerido)
-- `GET /api/summary` — contagem de cadastros sem exposição de valores (token requerido)
+A API escuta somente `127.0.0.1` em porta disponível. O renderer usa IPC restrito; não recebe o token. `/health` indica resposta do processo, não é um teste completo da integridade do banco.
 
-A integração React/SQLite é feita via IPC restrito no Electron. O token da API não é entregue ao renderer.
-O script `npm run demo:api` demonstra os endpoints sem expor token permanente.
+## Git e colaboração
 
-## CI / CD
+GitHub Flow: branches `feat/*`, `fix/*` e `demo/*`, commits descritivos e PR para `main`. Histórico original preservado; a aplicação antiga `controle-financeiro` permanece independente.
 
-- `.github/workflows/ci.yml` executa testes Vitest, testes de API/SQLite, build de React e Trivy em pushes e PRs.
-- O scan Trivy é informativo (não bloqueia CI); falhas de teste bloqueiam o build.
-- `.github/workflows/desktop-preview.yml` gera EXE/AppImage na branch de desenvolvimento; commits com `[candidate]` preparam um **rascunho** de release, sem publicação automática.
-- `.github/workflows/release.yml` compila dois sistemas em runners separados e publica o GitHub Release em tags `v*`.
-- Os executáveis são artefatos de entrega; usuários fazem deployment ao executar.
-- Rollback: substituir pelo executável da tag anterior (o banco local permanece), com backup e migração segura de esquema.
+- [PR #1: implementação offline](https://github.com/DanielBDeDeus/dividimos-offline/pull/1).
+- [PR #2: falha controlada e correção](https://github.com/DanielBDeDeus/dividimos-offline/pull/2).
+- Os PRs foram preparados na conta de Daniel com assistência de IA. Não constituem revisão independente ou contribuição de outra pessoa.
 
-## Teste de falha real para apresentação
+## CI/CD e artefato rastreável
 
-```sh
-bash scripts/demo-regression.sh prepare
-# push da branch, abrir PR, capturar run vermelho
-bash scripts/demo-regression.sh fix
-# push da correção, capturar run verde
-```
+| Etapa | Execução |
+|---|---|
+| Integração | Push/PR dispara checkout, Node 24 e `npm ci` |
+| Testes | Vitest + Node test runner; erro obrigatório interrompe o job |
+| Construção | Vite compila frontend; electron-builder empacota o desktop |
+| Segurança | Trivy HIGH/CRITICAL, relatório informativo; não bloqueia por achados |
+| Entrega | Artefatos por SHA; release versionada com EXE, AppImage e hashes |
+| Implantação | Baixar o artefato aprovado e executar no computador local |
 
-## Publicar versão
+`.github/workflows/ci.yml` valida pushes e PRs. `desktop-preview.yml` gera previews da branch offline. `release.yml` executa em tag `v*`, manualmente, ou após mudanças de versão/workflow em `main`; verifica testes, Electron no Windows e Trivy no Linux antes de publicar. Tag deve corresponder à versão de `package.json`; uma nova versão deve incrementar esse número. Token efêmero `GITHUB_TOKEN` fornecido pelo GitHub, permissão `contents: write` apenas no job de publicação. Não há credencial pessoal no código.
 
-Atualizar `package.json` e testar. Conferir versão e tag exatas. Depois:
+## Falha controlada real
 
-```sh
-git tag v1.0.0
-git push origin v1.0.0
-```
+`calcularSaldoDisponivel(100, 20, 30)` retorna **50**. Na branch de demonstração, o teste foi alterado para exigir **-999**, sem modificar a função de produção.
 
-Não é feito upload automático pela etapa de setup. A release depende do repositório final estar no GitHub.
+- [Run vermelho 40994472015](https://github.com/DanielBDeDeus/dividimos-offline/actions/runs/40994472015): 1 teste falhou, 8 passaram; etapas posteriores bloqueadas.
+- Correção: expectativa voltou para 50 no commit `60d03fdc32374f803d573af26bf7cfd8a51300d8`.
+- [Run verde 40994594705](https://github.com/DanielBDeDeus/dividimos-offline/actions/runs/40994594705): 9 testes Vitest e 11 API/SQLite, build e scan concluídos.
 
-## Privacidade e segurança
+Na implementação principal são 8 Vitest + 11 API/SQLite; o teste adicional é da demonstração. Os casos cobrem saldo, parcelas, serialização, persistência após reabrir banco, autorização, origem/host, JSON inválido, limites e UTF-8. Não reutilizar evidências de outro repositório.
 
-- Não colocar backups, `finances.db`, tokens ou registros financeiros reais no Git.
-- Usar dados fictícios na demonstração.
-- O servidor só escuta loopback, valida Host/Origin e exige token nas rotas de dados.
-- Electron com `contextIsolation`, `sandbox`, navegação bloqueada para origens externas e IPC restrito.
-- Release não possui assinatura de código; o Windows pode mostrar aviso SmartScreen.
-- Dados locais não são criptografados; proteger a conta do sistema operacional e os backups.
+## Atualização e rollback
 
-## Limitações
+1. Exportar backup JSON; fechar o aplicativo e guardar o executável atual.
+2. Baixar a nova versão e conferir SHA256. Substituir somente o executável, preservando o diretório de dados.
+3. Abrir e conferir os registros. Se houver problema, fechar e voltar ao executável anterior.
+4. Se houver mudança incompatível de dados, preservar também o banco atual e restaurar o backup compatível pela interface. Não restaurar às cegas sobre a única cópia.
 
-Testar o AppImage em Fedora/Bazzite e o Portable no Windows antes da entrega.
-Sem serviço de rede não há sincronização entre computadores. O app não migra automaticamente
-registros da antiga URL do Vercel ou do Supabase; recupere primeiro uma cópia desses dados e converta-a para o formato de backup suportado; não importe JSON arbitrário. O suporte `node:sqlite` depende da versão embutida do Electron.
+Não existe versão anterior pública comprovada para ensaio completo de downgrade. O procedimento está documentado; teste real entre versões e execução manual no PC do aluno devem ser registrados antes da apresentação.
 
-## PDF de evidencias gerado a partir de dados REAIS
+## Segurança, configuração e observabilidade
 
-Após criar PRs, rodar os pipelines e publicar release, execute:
+- Bind loopback, validação Host/Origin, token aleatório, limite de payload e queries parametrizadas.
+- Electron com sandbox, contextIsolation, nodeIntegration desativado, IPC validado, CSP e navegação externa bloqueada.
+- Sem dados financeiros reais, backups, DB ou segredos no Git. Banco local não criptografado; proteger conta e backups.
+- Configuração de usuário vem do SO; porta e token por sessão. O empacotamento usa `CSC_IDENTITY_AUTO_DISCOVERY=false` porque não há certificado. Nenhum `.env` de nuvem é necessário.
+- Logs em `logs/application.log` dentro do diretório de dados, com rotação a 1 MiB. Registram início, endereço `/health`, encerramento e erros genéricos, sem token ou valores financeiros.
+- Para demonstrar falha após deploy: abrir o endereço `/health` registrado, fechar o aplicativo e consultar novamente. A conexão recusada indica processo indisponível; reabrir e usar o novo endereço, pois a porta muda.
 
-```sh
-bash scripts/collect-evidence.sh --partner "Nome do colega"
-```
+## Entrega e limites
 
-A coleta usa `gh api` autenticado; escreve `docs/EVIDENCIAS_GERADAS.md` e,
-quando `reportlab` estiver disponivel, `docs/EVIDENCIAS_GERADAS.pdf` no estilo CEUB.
-Itens faltantes sao marcados como **PENDENTE**, nunca inventados.
+O roteiro e a matriz de requisitos estão em `docs/APRESENTACAO.md` e `docs/EVIDENCIAS.md`. A apresentação prática e o envio no Moodle são ações do aluno. Teste automatizado com rede externa bloqueada e seletores simulados não equivale a teste manual do EXE/AppImage com rede física desligada. Conferir as evidências atuais antes de afirmar conclusão.
