@@ -1,203 +1,71 @@
-import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { paraNumero } from "./utils/finance";
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { formatarBRL } from './utils/finance';
+import { tipos } from './utils/lancamentos';
 
-// ╔══════════════════════════════════════════════╗
-// ║         FORMATAÇÃO DE MOEDA (PADRÃO)         ║
-// ╚══════════════════════════════════════════════╝
-function formatarMoeda(valor) {
-  const numeroSeguro = paraNumero(valor);
-
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(numeroSeguro);
+function dataHora(iso) {
+  const data = new Date(iso);
+  return iso && Number.isFinite(data.getTime()) ? data.toLocaleString('pt-BR') : 'Sem data';
 }
 
-// ╔══════════════════════════════════════════════╗
-// ║           FORMATAÇÃO DE DATA                 ║
-// ╚══════════════════════════════════════════════╝
-function formatarData(dataIso) {
-  const d = new Date(dataIso);
+export default function LedgerPage({ transacoes, gastos, pessoas }) {
+  const [busca, setBusca] = useState('');
+  const [pessoa, setPessoa] = useState('');
+  const [tipo, setTipo] = useState('');
+  const [mes, setMes] = useState('');
+  const [ordem, setOrdem] = useState('desc');
 
-  return d.toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+  const ids = new Set(transacoes.map(item => item.gastoId).filter(id => id != null));
+  const legados = gastos.filter(gasto => !ids.has(gasto.id) && !transacoes.some(item =>
+    item.gastoId == null && item.pessoaId === gasto.pessoaId && item.tipo === gasto.tipo &&
+    (item.id === gasto.id || item.id === gasto.id + 1) && item.nome === gasto.nome));
+  const registros = [...transacoes, ...legados];
+  const pessoasNoHistorico = new Map(pessoas.map(item => [String(item.id), item.nome]));
+  for (const item of registros) {
+    if (item.pessoaId != null && !pessoasNoHistorico.has(String(item.pessoaId))) {
+      pessoasNoHistorico.set(String(item.pessoaId), item.pessoaNome || 'Pessoa removida');
+    }
+  }
+  const lista = registros.filter(item => {
+    const data = item.data ? new Date(item.data) : null;
+    const mesItem = data && Number.isFinite(data.getTime())
+      ? `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}` : '';
+    const texto = [item.nome, item.pessoaNome, item.cartaoFaturaNome, item.cartaoNome, item.observacao].join(' ').toLocaleLowerCase('pt-BR');
+    return (!busca || texto.includes(busca.trim().toLocaleLowerCase('pt-BR'))) &&
+      (!pessoa || pessoa === String(item.pessoaId)) &&
+      (!tipo || tipo === item.tipo) && (!mes || mes === mesItem);
+  }).sort((a, b) => ((Date.parse(b.data) || 0) - (Date.parse(a.data) || 0)) * (ordem === 'desc' ? 1 : -1));
 
-// ╔══════════════════════════════════════════════╗
-// ║                LEDGER PAGE                   ║
-// ╠══════════════════════════════════════════════╣
-// ║ Página dedicada ao histórico completo        ║
-// ║ de transações do sistema                     ║
-// ║                                              ║
-// ║ Fonte única de verdade (audit trail)         ║
-// ╚══════════════════════════════════════════════╝
-export default function LedgerPage({
-  transacoes,
-  temaAtivo,
-  pessoas,
-  perfilAtivo,
-}) {
-  const navigate = useNavigate();
+  function limpar() {
+    setBusca(''); setPessoa(''); setTipo(''); setMes(''); setOrdem('desc');
+  }
 
-  const ehHousehold = perfilAtivo === "household";
-
-  // ╔══════════════════════════════════════════════╗
-  // ║        FILTRO POR PERFIL ATIVO              ║
-  // ╚══════════════════════════════════════════════╝
-  const transacoesFiltradas = useMemo(() => {
-    if (ehHousehold) return transacoes;
-
-    return transacoes.filter(
-      (t) => String(t.pessoaId) === String(perfilAtivo)
-    );
-  }, [transacoes, ehHousehold, perfilAtivo]);
-
-  // ╔══════════════════════════════════════════════╗
-  // ║        ORDENAÇÃO (MAIS RECENTE PRIMEIRO)    ║
-  // ╚══════════════════════════════════════════════╝
-  const listaOrdenada = useMemo(() => {
-    return [...transacoesFiltradas].sort(
-      (a, b) => new Date(b.data) - new Date(a.data)
-    );
-  }, [transacoesFiltradas]);
-
-  // ╔══════════════════════════════════════════════╗
-  // ║               ESTILOS BASE                  ║
-  // ╚══════════════════════════════════════════════╝
-  const styles = {
-    container: {
-      minHeight: "100vh",
-      padding: "24px",
-      background: temaAtivo.pageBg,
-      color: temaAtivo.cardText,
-    },
-
-    header: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: "20px",
-    },
-
-    title: {
-      fontSize: "36px",
-      fontWeight: "700",
-      margin: 0,
-      color: temaAtivo.title,
-    },
-
-    button: {
-      padding: "10px 16px",
-      borderRadius: "999px",
-      border: "none",
-      cursor: "pointer",
-      fontWeight: "700",
-      background: temaAtivo.buttonBg,
-      color: "#fff",
-    },
-
-    card: {
-      background: temaAtivo.cardBg,
-      border: `1px solid ${temaAtivo.cardBorder}`,
-      borderRadius: "16px",
-      padding: "16px",
-      marginBottom: "12px",
-      display: "flex",
-      flexDirection: "column",
-      gap: "6px",
-    },
-
-    rowTop: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      gap: "10px",
-    },
-
-    nome: {
-      fontWeight: "700",
-    },
-
-    valor: {
-      fontWeight: "700",
-    },
-
-    meta: {
-      fontSize: "12px",
-      opacity: 0.8,
-    },
-
-    badge: {
-      padding: "4px 8px",
-      borderRadius: "999px",
-      fontSize: "11px",
-      fontWeight: "700",
-      color: "#fff",
-    },
-
-    debito: { background: "#ef4444" },
-    credito: { background: "#f59e0b" },
-    entrada: { background: "#22c55e" },
-    conta: { background: "#3b82f6" },
-  };
-
-  // ╔══════════════════════════════════════════════╗
-  // ║            RENDER PRINCIPAL                 ║
-  // ╚══════════════════════════════════════════════╝
-  return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <h1 style={styles.title}>Ledger</h1>
-
-        <button onClick={() => navigate("/")} style={styles.button}>
-          ← Voltar
-        </button>
-      </div>
-
-      {listaOrdenada.length === 0 ? (
-        <p>Nenhuma transação registrada ainda.</p>
-      ) : (
-        listaOrdenada.map((t) => (
-          <div key={t.id} style={styles.card}>
-            <div style={styles.rowTop}>
-              <span style={styles.nome}>{t.nome}</span>
-
-              <span
-                style={{
-                  ...styles.valor,
-                  ...(t.tipo === "debito"
-                    ? styles.debito
-                    : t.tipo === "credito"
-                    ? styles.credito
-                    : t.tipo === "entrada"
-                    ? styles.entrada
-                    : styles.conta),
-                  ...styles.badge,
-                }}
-              >
-                {t.tipo}
-              </span>
-            </div>
-
-            <div style={styles.rowTop}>
-              <span>{formatarMoeda(t.valor)}</span>
-              <span style={styles.meta}>{formatarData(t.data)}</span>
-            </div>
-
-            <div style={styles.meta}>
-              {t.pessoaNome}
-              {t.cartaoNome && ` · ${t.cartaoNome}`}
-              {t.origem && ` · ${t.origem}`}
-            </div>
-          </div>
-        ))
-      )}
+  return <section className="finance-panel" aria-label="Movimentações financeiras">
+    <div className="workspace-filters">
+      <label>Buscar<input type="search" placeholder="Descrição, pessoa ou cartão" value={busca} onChange={e => setBusca(e.target.value)} /></label>
+      <label>Pessoa<select value={pessoa} onChange={e => setPessoa(e.target.value)}>
+        <option value="">Todas</option>
+        {[...pessoasNoHistorico].map(([id, nome]) => <option key={id} value={id}>{nome}</option>)}
+      </select></label>
+      <label>Tipo<select value={tipo} onChange={e => setTipo(e.target.value)}>
+        <option value="">Todos</option>
+        {Object.entries(tipos).map(([id, nome]) => <option key={id} value={id}>{nome}</option>)}
+      </select></label>
+      <label>Mês<input type="month" value={mes} onChange={e => setMes(e.target.value)} /></label>
+      <label>Ordem<select value={ordem} onChange={e => setOrdem(e.target.value)}>
+        <option value="desc">Mais recentes</option><option value="asc">Mais antigas</option>
+      </select></label>
+      <button className="finance-button" onClick={limpar}>Limpar filtros</button>
     </div>
-  );
+    {!lista.length ? (registros.length ? <p>Nenhuma movimentação corresponde aos filtros.</p> :
+      <p>Nenhuma movimentação registrada. <Link className="finance-button" to="/gastos">Registrar gasto</Link></p>) :
+      <table className="finance-table">
+        <caption className="sr-only">Histórico de movimentações</caption>
+        <thead><tr><th scope="col">Descrição</th><th scope="col">Pessoa</th><th scope="col">Data</th><th scope="col">Valor</th></tr></thead>
+        <tbody>{lista.map(item => <tr key={`${item.gastoId ?? item.id}-${item.origem ?? 'legado'}`}>
+          <td><strong>{item.nome}</strong><br /><span className="muted">{item.origem === 'ajuste_manual' ? 'Ajuste de saldo' : tipos[item.tipo] ?? item.tipo}{item.cartaoFaturaNome && ` · ${item.cartaoFaturaNome}`}</span></td>
+          <td>{item.pessoaNome || '—'}</td><td>{dataHora(item.data)}</td><td className="finance-amount">{formatarBRL(item.valor)}</td>
+        </tr>)}</tbody>
+      </table>}
+  </section>;
 }

@@ -30,6 +30,30 @@ if (!process.versions.electron) {
   app.setPath('userData', path.join(dir, 'profile'));
   const backup = path.join(dir, 'backup.json');
   const blocked = [];
+  let fxCalls = 0;
+  let fxOffline = false;
+  globalThis.fetch = async url => {
+    assert.equal(url.origin, 'https://olinda.bcb.gov.br');
+    fxCalls++;
+    if (fxOffline) throw new Error('No external connection in smoke test');
+    return Response.json({ value: [{ cotacaoVenda: 5.4321, dataHoraCotacao: new Date(Date.now() - 86400000).toISOString() }] });
+  };
+  const { openStore } = require('../server/storage.cjs');
+  const prefix = 'controle-financeiro:';
+  const syntheticLegacy = {
+    [prefix + 'pessoas']: JSON.stringify([{ id: 123, nome: 'Perfil legado', salario: 1200, saldo: 1200, tema: 'purple' }]),
+    [prefix + 'gastos']: JSON.stringify([{ id: 321, tipo: 'debito', valor: 25, pessoaId: 123, pessoaNome: 'Perfil legado', nome: 'Ajuste legado', origem: 'ajuste_manual' }]),
+  };
+  if (phase === 'read') {
+    const store = openStore(path.join(dir, 'profile', 'finances.db'));
+    const state = store.read();
+    assert.equal(JSON.parse(state[prefix + 'pessoas'])[0].saldo, 950);
+    assert.equal(JSON.parse(state[prefix + 'gastos'])[0].valor, 50);
+    store.write({ ...state, ...syntheticLegacy,
+      [prefix + 'transacoes']: JSON.stringify([]),
+    });
+    store.close();
+  }
   let confirmation = 1;
   dialog.showSaveDialog = async () => ({ canceled: false, filePath: backup });
   dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [backup] });
@@ -49,10 +73,10 @@ if (!process.versions.electron) {
         const evaluate = script => win.webContents.executeJavaScript(script);
         async function ready() {
           for (let i = 0; i < 100; i++) {
-            if (await evaluate(`!!window.dividimos && document.body.innerText.includes('Exportar backup')`)) return;
+            if (await evaluate(`!!window.dividimos && !!document.getElementById('workspace-title')`)) return;
             await new Promise(resolve => setTimeout(resolve, 100));
           }
-          throw new Error('Renderer did not render the offline toolbar');
+          throw new Error('Renderer did not render the desktop workspace');
         }
         async function reload() {
           const loaded = new Promise(resolve => win.webContents.once('did-finish-load', resolve));
@@ -62,11 +86,55 @@ if (!process.versions.electron) {
         const startupLog = fs.readFileSync(path.join(dir, 'profile', 'logs', 'application.log'), 'utf8');
         assert.match(startupLog, /health=http:\/\/127\.0\.0\.1:\d+\/health/);
         assert.equal(await evaluate(`typeof window.require`), 'undefined');
-        const key = 'controle-financeiro:pessoas';
-        const expected = JSON.stringify([{ id: 123, nome: 'Teste Offline', salario: 1200, saldo: 1200, tema: 'purple' }]);
+        const key = prefix + 'pessoas';
+        const wait = async predicate => {
+          for (let i = 0; i < 50; i++) {
+            if (await evaluate(predicate)) return;
+            await new Promise(resolve => setTimeout(resolve, 50));
+          }
+          throw new Error('Renderer state not reached: ' + predicate);
+        };
+        async function nav(label) {
+          await evaluate(`[...document.querySelectorAll('nav a')].find(a => a.textContent === ${JSON.stringify(label)}).click()`);
+          await wait(`document.querySelector('h1').textContent === ${JSON.stringify(label)}`);
+        }
+        function fill(label, value) {
+          return evaluate(`(() => {
+            const element = [...document.querySelectorAll('label')].find(node => node.firstChild.textContent === ${JSON.stringify(label)}).querySelector('input');
+            const { set } = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+            set.call(element, ${JSON.stringify(value)});
+            element.dispatchEvent(new Event('input', { bubbles: true }));
+          })()`);
+        }
+        function button(label) {
+          return evaluate(`[...document.querySelectorAll('button')].find(node => node.textContent === ${JSON.stringify(label)}).click()`);
+        }
         if (phase === 'write') {
-          await evaluate(`localStorage.setItem(${JSON.stringify(key)}, ${JSON.stringify(expected)})`);
-          assert.equal((await evaluate('window.dividimos.loadState()'))[key], expected);
+          assert.equal(fxCalls, 0);
+          await nav('Pessoas');
+          await fill('Nome', 'Teste Offline');
+          await fill('Saldo inicial (R$)', '1.000,00');
+          await button('Adicionar pessoa');
+          await wait(`document.body.innerText.includes('Teste Offline cadastrada.')`);
+          await nav('Gastos');
+          await fill('Descrição', 'Mercado');
+          await fill('Valor (R$)', '50,00');
+          await button('Registrar gasto');
+          await wait(`document.body.innerText.includes('Gasto registrado.')`);
+          const expected = (await evaluate('window.dividimos.loadState()'))[key];
+          assert.equal(JSON.parse(expected)[0].saldo, 950);
+          assert.equal(fxCalls, 0);
+          await nav('Backup e ajustes');
+          await wait(`document.body.innerText.includes('Cotação ainda não disponível.')`);
+          assert.equal(fxCalls, 0);
+          await button('Atualizar cotação');
+          await wait(`document.body.innerText.includes('5,4321')`);
+          assert.equal(fxCalls, 1);
+          fxOffline = true;
+          await button('Atualizar cotação');
+          await wait(`document.body.innerText.includes('Não foi possível atualizar a cotação')`);
+          assert.equal(await evaluate(`document.body.innerText.includes('5,4321')`), true);
+          assert.equal(fxCalls, 2);
           await reload();
           assert.equal(await evaluate(`localStorage.getItem(${JSON.stringify(key)})`), expected);
           assert.equal((await evaluate('window.dividimos.exportBackup()')).saved, true);
@@ -86,8 +154,16 @@ if (!process.versions.electron) {
           assert.equal(rejected, true);
           assert.deepEqual(await evaluate('window.dividimos.loadState()'), beforeInvalid);
         } else {
-          assert.equal(await evaluate(`localStorage.getItem(${JSON.stringify(key)})`), expected);
-          assert.equal((await evaluate('window.dividimos.loadState()'))[key], expected);
+          for (const [legacyKey, expected] of Object.entries(syntheticLegacy)) {
+            assert.equal(await evaluate(`localStorage.getItem(${JSON.stringify(legacyKey)})`), expected);
+            assert.equal((await evaluate('window.dividimos.loadState()'))[legacyKey], expected);
+          }
+          await nav('Visão geral');
+          assert.match(await evaluate(`[...document.querySelectorAll('.finance-kpi')].find(node => node.innerText.includes('Saídas no débito')).querySelector('dd').innerText`), /25,00/);
+          assert.match(await evaluate(`[...document.querySelectorAll('.finance-kpi')].find(node => node.innerText.includes('Compras no crédito')).querySelector('dd').innerText`), /0,00/);
+          await nav('Backup e ajustes');
+          await wait(`document.body.innerText.includes('5,4321')`);
+          assert.equal(fxCalls, 0, 'Cached quote triggered a request');
         }
         assert.deepEqual(blocked, [], 'Renderer attempted external network access');
         console.log(`PASS Electron ${phase}: renderer and SQLite with external network blocked`);

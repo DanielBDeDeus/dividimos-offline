@@ -35,3 +35,29 @@ Integrante 1: Daniel Barros de Deus. Integrante 2: PENDENTE (nome, contribuiçã
 - Aprovação/publicação da release e merge após revisão.
 - Execução do EXE sem admin e do AppImage no Bazzite; teste com rede fisicamente desligada; operações CRUD completas; seletores de backup; upgrade/rollback reais.
 - Identidade e contribuição real do segundo estudante; apresentação por ambos; duas submissões individuais no Moodle.
+
+
+## Revisão de interface e cotação
+
+A v1.0.0 concentrava filtros e tarefas numa página e exibia “Erro” na cotação. A revisão usa telas por tarefa com navegação persistente. O formulário de gastos pede primeiro a forma de pagamento e mostra o impacto no saldo ou na fatura. A tabela de histórico tem busca, filtros e ordem. As capturas usam dados fictícios no Chromium com frontends de produção servidos pela API local, a 1366 × 768.
+
+| Visão geral v1.0.0 | Visão geral em revisão |
+| --- | --- |
+| ![Painel da v1.0.0](imagens/ux-antes.webp) | ![Visão geral atualizada](imagens/ux-depois.webp) |
+
+![Formulário de gasto com saldo ou Pix e prévia do valor debitado](imagens/ux-novo-gasto.webp)
+
+### Referências aplicadas
+
+- A navegação usa rótulos de tarefa e indicação da página atual, seguindo o Fluent 2 e o princípio de reconhecimento do Nielsen Norman Group. [Fluent 2](https://fluent2.microsoft.design/components/web/react/core/nav/usage) · [NN/g](https://www.nngroup.com/articles/ten-usability-heuristics/)
+- Os formulários usam rótulos persistentes, campos condicionais e mensagens junto à ação. Histórico usa busca e filtros visíveis. [Carbon Forms](https://www.carbondesignsystem.com/building-blocks/core/patterns/forms) · [Carbon Data Table](https://www.carbondesignsystem.com/building-blocks/core/components/data-table/guidelines) · [Actual Budget](https://actualbudget.org/docs/transactions/filters/)
+- A interface usa foco visível, nomes acessíveis, alvos maiores que 24 px nos controles principais e uma tabela de valores alternativa ao gráfico. Isso cobre verificações selecionadas, sem alegação de conformidade integral. [WCAG 2.2](https://www.w3.org/TR/WCAG22/)
+- A consulta usa a cotação oficial de venda mais recente disponível no período consultado, a pedido do usuário. [Banco Central, dados abertos PTAX](https://dadosabertos.bcb.gov.br/dataset/dolar-americano-usd-todos-os-boletins-diarios)
+
+### Verificação
+
+- Testes locais de unidade e API/SQLite cobrem débito, crédito, pagamento parcial, edição/exclusão, fechamento de fatura, formato brasileiro e cache de PTAX com sucesso, falha, timeout e dados inválidos.
+- Chromium executou o fluxo de cadastro, gasto sem cartão, crédito, pagamento de fatura, ajuste, conta paga, edição/exclusão, filtros e recarga. Foram verificadas sete telas em cada tamanho de janela 960 × 600, 1366 × 768 e 1920 × 1080, além de foco visível com Tab.
+- O smoke do Electron no workflow usa um perfil descartável, bloqueia a rede externa do renderer, simula a PTAX e os diálogos de arquivo e verifica uma carga de dados financeiros legados. Consulte o run do commit para o resultado.
+- O esquema de SQLite e as chaves de backup permanecem compatíveis. Cada operação financeira grava um estado consolidado. Os dados de pessoas reais ficam fora da verificação.
+- Permanecem os testes físicos de execução sem admin, rede desconectada, seleção nativa de arquivos e upgrade/rollback entre portáteis.
