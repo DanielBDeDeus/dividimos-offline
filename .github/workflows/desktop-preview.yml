@@ -2,7 +2,7 @@ name: Desktop portable preview
 on:
   workflow_dispatch:
   push:
-    branches: ['feat/offline-desktop']
+    branches: ['feat/offline-desktop', 'feat/desktop-ux-overhaul']
 permissions:
   contents: read
 jobs:
@@ -25,6 +25,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run verify
+      - run: npm run lint
       - name: Electron persistence and backup smoke test
         if: runner.os == 'Windows'
         run: npm run test:desktop
@@ -32,12 +33,22 @@ jobs:
         run: npx electron-builder --${{ matrix.target }} --x64 --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Hash portable package
+        shell: bash
+        working-directory: release
+        run: |
+          if [ "${{ matrix.target }}" = win ]; then
+            sha256sum *.exe > SHA256SUMS-win.txt
+          else
+            sha256sum *.AppImage > SHA256SUMS-linux.txt
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: DividimOS-${{ matrix.target }}-${{ github.sha }}
           path: |
             release/*.exe
             release/*.AppImage
+            release/SHA256SUMS-*.txt
           if-no-files-found: error
   candidate:
     # Drafts are prepared only on an explicit candidate commit or manual run.

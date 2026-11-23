@@ -8,7 +8,7 @@ Abra o app, este roteiro, o repositório, os dois runs de CI e a release. Use da
 
 ## 0:00-1:30 - Problema e produto
 
-**Mostrar:** pessoas, cartões, gastos e saldo. Criar uma pessoa fictícia e um gasto; fechar e reabrir.
+**Mostrar:** na v1.1.0, abrir **Pessoas**, criar uma pessoa com saldo inicial de R$ 1.000,00 e registrar R$ 50,00 em **Gastos** com dinheiro, saldo ou Pix. Conferir R$ 950,00 em **Visão geral**, fechar e reabrir.
 
 **Dizer:** “O DividimOS organiza finanças domésticas. A versão anterior dependia de serviços externos. Esta versão guarda os dados em SQLite e funciona offline. O foco deste trabalho é o caminho do código até um executável testado e distribuído.”
 
@@ -44,7 +44,7 @@ Abra o app, este roteiro, o repositório, os dois runs de CI e a release. Use da
 
 ## 7:30-9:00 - Backup, atualização e encerramento
 
-**Mostrar:** exportar backup, alterar dado fictício e restaurar após confirmação.
+**Mostrar:** abrir **Backup e ajustes** na v1.1.0, exportar backup, alterar dado fictício e restaurar após confirmação. Mostrar a cotação manual ou salva. Ao clicar em **Atualizar cotação**, o processo principal consulta a PTAX de venda. A rotina de gastos e o backup continuam disponíveis offline.
 
 **Dizer:** “Os dados ficam fora do executável. Antes de atualizar, exporto backup e guardo a versão anterior. Para rollback, fecho o app e volto ao binário anterior, conferindo compatibilidade dos dados. Não afirmo ter testado troca entre duas versões públicas enquanto esse ensaio não existir.”
 

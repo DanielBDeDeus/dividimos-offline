@@ -8,14 +8,24 @@ Controle financeiro doméstico com pessoas, cartões, gastos, contas, saldos e g
 
 ## Baixar e executar
 
-[Releases e executáveis](https://github.com/DanielBDeDeus/dividimos-offline/releases) · [Código](https://github.com/DanielBDeDeus/dividimos-offline) · [Roteiro de apresentação](docs/APRESENTACAO.md) · [Evidências](docs/EVIDENCIAS.md)
+[Release v1.1.0 e executáveis](https://github.com/DanielBDeDeus/dividimos-offline/releases/tag/v1.1.0) · [Código](https://github.com/DanielBDeDeus/dividimos-offline) · [Roteiro de apresentação](docs/APRESENTACAO.md) · [Evidências](docs/EVIDENCIAS.md)
 
-- Windows x64: baixar `DividimOS-1.0.0-Portable.exe` e abrir. Não instala Node nem exige instalador. Políticas do computador podem bloquear executáveis não assinados.
-- Linux x64: baixar `DividimOS-1.0.0-x86_64.AppImage`, permitir execução nas propriedades e abrir. Requer sessão gráfica e suporte AppImage/FUSE. Alternativa: `chmod +x DividimOS-1.0.0-x86_64.AppImage && ./DividimOS-1.0.0-x86_64.AppImage --appimage-extract-and-run`.
+- Windows x64: baixar `DividimOS-1.1.0-Portable.exe` e abrir. Não instala Node nem exige instalador. Políticas do computador podem bloquear executáveis não assinados.
+- Linux x64: baixar `DividimOS-1.1.0-x86_64.AppImage`, permitir execução nas propriedades e abrir. Requer sessão gráfica e suporte AppImage/FUSE. Alternativa: `chmod +x DividimOS-1.1.0-x86_64.AppImage && ./DividimOS-1.1.0-x86_64.AppImage --appimage-extract-and-run`.
 - Conferir o arquivo contra `SHA256SUMS.txt` da mesma release. Internet somente para baixar; nenhum serviço externo é necessário durante o uso.
-- Dados ficam no diretório de usuário do Electron (`app.getPath('userData')`), arquivo `finances.db`, separado do executável. Exportar/importar JSON pela barra de backup.
+- Dados ficam no diretório de usuário do Electron (`app.getPath('userData')`), arquivo `finances.db`, separado do executável. Exportar/importar JSON em **Backup e ajustes**.
 
 O artefato escolhido é EXE/AppImage, permitido pelo enunciado mediante justificativa: entrega diretamente o produto desktop offline, com runtime embutido, sem exigir Docker ou privilégios administrativos do usuário. Não há sincronização entre computadores nem migração automática do antigo Supabase.
+
+## O que mudou na v1.1.0
+
+- **Pessoas** cadastra saldo inicial e salário separadamente. Ajustes de saldo registram um lançamento no histórico.
+- **Gastos** começa pela forma de pagamento. Dinheiro, saldo ou Pix usa o saldo da pessoa sem exigir cartão. **Cartões e faturas** permite registrar pagamentos e consultar a dívida em aberto.
+- **Visão geral** mostra dinheiro disponível, saídas no débito, compras no ciclo de crédito, faturas em aberto e contas do mês. **Histórico** permite buscar, ordenar e filtrar movimentações.
+- **Backup e ajustes** reúne exportação, restauração e cotação. A atualização de USD/BRL é opcional e consulta a PTAX de venda do Banco Central. Ao abrir o app, ele lê somente a última cotação salva. É possível registrar uma cotação manual sem internet. A cotação é referência e fica em `usd-brl.json`, fora do banco e do backup financeiro.
+- O mesmo `finances.db` e o formato de backup JSON v1 são usados. Antes de atualizar com dados reais, exporte um backup com a versão anterior. Se voltar para ela, mantenha uma cópia dos dados e restaure o backup anterior à atualização.
+
+[Veja as telas e os cenários verificados](docs/EVIDENCIAS.md#revisão-de-interface-e-cotação).
 
 ## Executar a partir do código e testar API
 

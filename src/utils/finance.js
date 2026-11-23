@@ -71,3 +71,36 @@ export function calcularSaldoDisponivel(salario, gastoDebito, faturaAtual) {
     paraNumero(faturaAtual)
   );
 }
+// Apenas gastos de crédito pertencem à fatura. Ajustes de saldo nunca são crédito.
+export function gastoEntraNaFaturaDoCiclo(gasto, cartoes, mesSelecionado, anoSelecionado) {
+  if (!gasto || gasto.tipo !== "credito") return false;
+
+  // Lançamentos legados de crédito sem data continuam visíveis.
+  if (!gasto.data) return true;
+
+  const cartao = cartoes.find(c => c.tipo === "credito" &&
+    (gasto.cartaoId != null ? c.id === gasto.cartaoId : c.nome === gasto.cartaoNome));
+  if (!cartao || !cartao.diaFechamento) return false;
+
+  const dataGasto = new Date(gasto.data);
+  const ano = Number(anoSelecionado);
+  const mes = Number(mesSelecionado);
+  const fechar = (mesBase) => {
+    const ultimoDia = new Date(ano, mesBase + 1, 0).getDate();
+    return new Date(ano, mesBase, Math.min(ultimoDia, Number(cartao.diaFechamento)) + 1);
+  };
+  return dataGasto >= fechar(mes - 2) && dataGasto < fechar(mes - 1);
+}
+
+// Entrada monetária do formulário. Mantém os números legados sob paraNumero.
+export function lerValorBRL(texto, casas = 2) {
+  const valor = String(texto).trim().replace(/^R\$\s*/, '');
+  const padrao = new RegExp(`^(?:\\d+|\\d{1,3}(?:\\.\\d{3})+)(?:,\\d{1,${casas}})?$`);
+  if (!padrao.test(valor)) return null;
+  const numero = Number(valor.replaceAll('.', '').replace(',', '.'));
+  return Number.isFinite(numero) && numero < 1e12 ? numero : null;
+}
+
+export function arredondarBRL(valor) {
+  return Math.round((valor + Number.EPSILON) * 100) / 100;
+}

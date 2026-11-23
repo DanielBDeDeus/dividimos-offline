@@ -1,9 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import 'material-symbols/outlined.css';
 import './index.css';
 import App from './App.jsx';
-import OfflineToolbar from './OfflineToolbar.jsx';
 import { loadStateFromLocal, installLocalAutosave } from './utils/cloudState.js';
 
 async function start() {
@@ -16,6 +14,6 @@ async function start() {
     document.getElementById('root').textContent = 'Falha ao carregar dados locais. Nenhuma informacao foi alterada. ' + e.message;
     return;
   }
-  createRoot(document.getElementById('root')).render(<StrictMode><App/><OfflineToolbar/></StrictMode>);
+  createRoot(document.getElementById('root')).render(<StrictMode><App/></StrictMode>);
 }
 start();

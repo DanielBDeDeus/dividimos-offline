@@ -4,6 +4,7 @@ import {
   classificarGastoCredito,
   calcularSaldoDisponivel,
   obterAnoMes,
+  gastoEntraNaFaturaDoCiclo,
 } from "./finance";
 
 describe("funções financeiras", () => {
@@ -30,5 +31,26 @@ describe("funções financeiras", () => {
 
   it("extrai ano e mês corretamente", () => {
     expect(obterAnoMes("2026-04-06")).toBe("2026-04");
+  });
+});
+
+describe("separação de gastos debitados e faturas de crédito", () => {
+  const cartoes = [{ nome: "Cartão crédito", tipo: "credito", diaFechamento: 15 }];
+
+  it("nunca conta ajuste manual de débito sem data como crédito", () => {
+    const ajuste = { nome: "Compra", tipo: "debito", origem: "ajuste_manual", valor: 25 };
+    expect(gastoEntraNaFaturaDoCiclo(ajuste, cartoes, "11", "2026")).toBe(false);
+  });
+
+  it("exclui outros movimentos que não são de crédito", () => {
+    for (const tipo of ["entrada", "debito", "pagamento_fatura"]) {
+      expect(gastoEntraNaFaturaDoCiclo({ tipo, data: "2026-11-05T12:00:00", cartaoNome: "Cartão crédito" }, cartoes, "11", "2026")).toBe(false);
+    }
+  });
+
+  it("mantém compras reais de crédito dentro do seu ciclo", () => {
+    const credito = { tipo: "credito", data: "2026-11-05T12:00:00", cartaoNome: "Cartão crédito" };
+    expect(gastoEntraNaFaturaDoCiclo(credito, cartoes, "11", "2026")).toBe(true);
+    expect(gastoEntraNaFaturaDoCiclo({ ...credito, data: "2026-10-01T12:00:00" }, cartoes, "11", "2026")).toBe(false);
   });
 });
