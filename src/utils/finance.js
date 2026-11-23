@@ -71,3 +71,23 @@ export function calcularSaldoDisponivel(salario, gastoDebito, faturaAtual) {
     paraNumero(faturaAtual)
   );
 }
+// Apenas gastos de crédito pertencem à fatura. Ajustes de saldo nunca são crédito.
+export function gastoEntraNaFaturaDoCiclo(gasto, cartoes, mesSelecionado, anoSelecionado) {
+  if (!gasto || gasto.tipo !== "credito") return false;
+
+  // Lançamentos legados de crédito sem data continuam visíveis.
+  if (!gasto.data) return true;
+
+  const cartao = cartoes.find(
+    (c) => c.tipo === "credito" && c.nome === gasto.cartaoNome
+  );
+  if (!cartao || !cartao.diaFechamento) return false;
+
+  const dataGasto = new Date(gasto.data);
+  const ano = Number(anoSelecionado);
+  const mes = Number(mesSelecionado);
+  const fechamentoAtual = new Date(ano, mes - 1, cartao.diaFechamento);
+  const fechamentoAnterior = new Date(ano, mes - 2, cartao.diaFechamento);
+
+  return dataGasto > fechamentoAnterior && dataGasto <= fechamentoAtual;
+}
