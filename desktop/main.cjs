@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const { app, BrowserWindow, ipcMain, dialog, session } = require('electron');
 const { createApi } = require('../server/api.cjs');
 const { validateState } = require('../server/storage.cjs');
+const { createFxStore } = require('./fx.cjs');
 let win, api;
 const hasLock = app.requestSingleInstanceLock();
 if (!hasLock) app.quit();
@@ -12,7 +13,19 @@ app.on('second-instance', () => {
 });
 const isValidSender = event => !!win && !win.isDestroyed() && event.sender === win.webContents && event.senderFrame === win.webContents.mainFrame;
 
-function handlers() {
+function handlers(fx) {
+  ipcMain.handle('fx:read', event => {
+    if (!isValidSender(event)) throw new Error('Remetente bloqueado');
+    return fx.read();
+  });
+  ipcMain.handle('fx:refresh', event => {
+    if (!isValidSender(event)) throw new Error('Remetente bloqueado');
+    return fx.refresh();
+  });
+  ipcMain.handle('fx:manual', (event, rate) => {
+    if (!isValidSender(event)) throw new Error('Remetente bloqueado');
+    return fx.manual(rate);
+  });
   ipcMain.handle('state:load', event => { if (!isValidSender(event)) throw new Error('Remetente bloqueado'); return api.store.read(); });
   ipcMain.on('state:save-sync', (event, state) => {
     if (!isValidSender(event)) { event.returnValue = { ok: false, error: 'Remetente bloqueado' }; return; }
@@ -64,7 +77,7 @@ async function boot() {
   app.on('before-quit', () => log.info('Encerramento solicitado'));
   process.on('uncaughtExceptionMonitor', () => log.error('Excecao nao tratada; reinicie o aplicativo'));
   session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
-  handlers();
+  handlers(createFxStore(dataDir));
   win = new BrowserWindow({ width: 1250, height: 840, minWidth: 960, minHeight: 600, title: 'DividimOS', show: false,
     webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true } });
   win.once('ready-to-show', () => win.show());

@@ -17,6 +17,18 @@ Controle financeiro doméstico com pessoas, cartões, gastos, contas, saldos e g
 
 O artefato escolhido é EXE/AppImage, permitido pelo enunciado mediante justificativa: entrega diretamente o produto desktop offline, com runtime embutido, sem exigir Docker ou privilégios administrativos do usuário. Não há sincronização entre computadores nem migração automática do antigo Supabase.
 
+## Interface em revisão
+
+As instruções de download acima correspondem à publicação v1.0.0. Esta revisão de interface pode ser testada pela branch e pelos artefatos do workflow **Desktop portable preview**.
+
+- **Pessoas** cadastra saldo inicial e salário separadamente. Ajustes de saldo registram um lançamento no histórico.
+- **Gastos** começa pela forma de pagamento. Dinheiro, saldo ou Pix usa o saldo da pessoa sem exigir cartão. **Cartões e faturas** permite registrar pagamentos e consultar a dívida em aberto.
+- **Visão geral** mostra dinheiro disponível, saídas no débito, compras no ciclo de crédito, faturas em aberto e contas do mês. **Histórico** permite buscar, ordenar e filtrar movimentações.
+- **Backup e ajustes** reúne exportação, restauração e cotação. A atualização de USD/BRL é opcional e consulta a PTAX de venda do Banco Central. Ao abrir o app, ele lê somente a última cotação salva. É possível registrar uma cotação manual sem internet. A cotação é referência e fica em `usd-brl.json`, fora do banco e do backup financeiro.
+- O mesmo `finances.db` e o formato de backup JSON v1 são usados. Antes de experimentar a prévia com dados reais, exporte um backup com a versão anterior. Se voltar para ela, mantenha uma cópia dos dados e restaure o backup anterior à atualização.
+
+[Veja as telas e os cenários verificados](docs/EVIDENCIAS.md#revisão-de-interface-e-cotação).
+
 ## Executar a partir do código e testar API
 
 Ambiente de desenvolvimento: Git, Node.js 24 e npm. Para a interface desktop, Windows/Linux x64 com sessão gráfica. Instalação reproduzível pelo lockfile:

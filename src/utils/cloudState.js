@@ -36,19 +36,44 @@ export async function loadStateFromLocal() {
   restoreLocalState(data);
 }
 let installed = false;
+let batching = false;
+
+export function saveLocalEntries(entries) {
+  const storage = window.localStorage;
+  const changes = Object.entries(entries).filter(([key, value]) => storage.getItem(key) !== value);
+  if (!changes.length) return;
+  const previous = changes.map(([key]) => [key, storage.getItem(key)]);
+  batching = true;
+  try {
+    for (const [key, value] of changes) storage.setItem(key, value);
+    if (installed) persistLocalState();
+  } catch (error) {
+    for (const [key, value] of previous) {
+      if (value === null) storage.removeItem(key);
+      else storage.setItem(key, value);
+    }
+    throw error;
+  } finally {
+    batching = false;
+  }
+}
+
+function persistLocalState() {
+  const result = window.dividimos.saveStateSync(collectLocalState());
+  if (!result?.ok) {
+    const message = 'Falha ao salvar. Feche e reabra o aplicativo. ' + (result?.error || 'Erro SQLite');
+    document.getElementById('root')?.replaceChildren(document.createTextNode(message));
+    throw new Error(message);
+  }
+}
 export function installLocalAutosave() {
   if (installed || !window.dividimos?.saveStateSync) return;
   installed = true;
   const set = Storage.prototype.setItem;
   const remove = Storage.prototype.removeItem;
   function persist(storage, key) {
-    if (storage !== window.localStorage || !STORAGE_KEY_LIST.includes(key)) return;
-    const result = window.dividimos.saveStateSync(collectLocalState());
-    if (!result?.ok) {
-      const message = 'Falha ao salvar. Feche e reabra o aplicativo. ' + (result?.error || 'Erro SQLite');
-      document.getElementById('root')?.replaceChildren(document.createTextNode(message));
-      throw new Error(message);
-    }
+    if (batching || storage !== window.localStorage || !STORAGE_KEY_LIST.includes(key)) return;
+    persistLocalState();
   }
   Storage.prototype.setItem = function(key,value) { set.call(this,key,value); persist(this,key); };
   Storage.prototype.removeItem = function(key) { remove.call(this,key); persist(this,key); };

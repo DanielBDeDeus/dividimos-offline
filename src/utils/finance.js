@@ -78,16 +78,29 @@ export function gastoEntraNaFaturaDoCiclo(gasto, cartoes, mesSelecionado, anoSel
   // Lançamentos legados de crédito sem data continuam visíveis.
   if (!gasto.data) return true;
 
-  const cartao = cartoes.find(
-    (c) => c.tipo === "credito" && c.nome === gasto.cartaoNome
-  );
+  const cartao = cartoes.find(c => c.tipo === "credito" &&
+    (gasto.cartaoId != null ? c.id === gasto.cartaoId : c.nome === gasto.cartaoNome));
   if (!cartao || !cartao.diaFechamento) return false;
 
   const dataGasto = new Date(gasto.data);
   const ano = Number(anoSelecionado);
   const mes = Number(mesSelecionado);
-  const fechamentoAtual = new Date(ano, mes - 1, cartao.diaFechamento);
-  const fechamentoAnterior = new Date(ano, mes - 2, cartao.diaFechamento);
+  const fechar = (mesBase) => {
+    const ultimoDia = new Date(ano, mesBase + 1, 0).getDate();
+    return new Date(ano, mesBase, Math.min(ultimoDia, Number(cartao.diaFechamento)) + 1);
+  };
+  return dataGasto >= fechar(mes - 2) && dataGasto < fechar(mes - 1);
+}
 
-  return dataGasto > fechamentoAnterior && dataGasto <= fechamentoAtual;
+// Entrada monetária do formulário. Mantém os números legados sob paraNumero.
+export function lerValorBRL(texto, casas = 2) {
+  const valor = String(texto).trim().replace(/^R\$\s*/, '');
+  const padrao = new RegExp(`^(?:\\d+|\\d{1,3}(?:\\.\\d{3})+)(?:,\\d{1,${casas}})?$`);
+  if (!padrao.test(valor)) return null;
+  const numero = Number(valor.replaceAll('.', '').replace(',', '.'));
+  return Number.isFinite(numero) && numero < 1e12 ? numero : null;
+}
+
+export function arredondarBRL(valor) {
+  return Math.round((valor + Number.EPSILON) * 100) / 100;
 }
