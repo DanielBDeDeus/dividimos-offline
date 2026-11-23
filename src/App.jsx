@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { paraNumero } from "./utils/finance";
+import { paraNumero, gastoEntraNaFaturaDoCiclo } from "./utils/finance";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import PessoasPage from "./PessoasPage";
 
@@ -728,6 +728,7 @@ function alterarSaldoPessoa(idPessoa, valor, comentario = "") {
   // ╚══════════════════════════════════════════════╝
   const ajusteComoGasto = {
     id: Date.now(),
+    data: new Date().toISOString(),
     nome: comentario || "Ajuste manual de saldo",
     valor: Math.abs(numero),
     tipo: numero < 0 ? "debito" : "entrada",
@@ -1469,29 +1470,11 @@ const gastosFiltrados = useMemo(() => {
 const gastosNoCiclo = useMemo(() => {
   const base = ehHousehold
     ? gastos
-    : gastos.filter(
-        (g) => String(g.pessoaId) === String(perfilAtivo)
-      );
+    : gastos.filter((g) => String(g.pessoaId) === String(perfilAtivo));
 
-  return base.filter((gasto) => {
-    if (!gasto.data) return true;
-    if (gasto.tipo !== "credito") return false;
-
-    const cartao = cartoes.find(c => c.nome === gasto.cartaoNome);
-    if (!cartao || !cartao.diaFechamento) return false;
-
-    const dataGasto = new Date(gasto.data);
-
-    const diaFechamento = cartao.diaFechamento;
-
-    const ano = parseInt(anoSelecionado);
-    const mes = parseInt(mesSelecionado);
-
-    const fechamentoAtual = new Date(ano, mes - 1, diaFechamento);
-    const fechamentoAnterior = new Date(ano, mes - 2, diaFechamento);
-
-    return dataGasto > fechamentoAnterior && dataGasto <= fechamentoAtual;
-  });
+  return base.filter((gasto) =>
+    gastoEntraNaFaturaDoCiclo(gasto, cartoes, mesSelecionado, anoSelecionado)
+  );
 }, [gastos, cartoes, mesSelecionado, anoSelecionado, perfilAtivo, ehHousehold]);
 
   const gastoDebitoFiltrado = useMemo(() => {
