@@ -24,3 +24,14 @@ dist-ssr
 *.sw?
 
 .env.local
+
+# DividimOS offline data / artifacts
+release/
+.python-deps/
+setup-checks.log
+*.db
+*.db-shm
+*.db-wal
+*.AppImage
+*.exe
+*backup*.json

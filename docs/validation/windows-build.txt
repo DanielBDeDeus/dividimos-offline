@@ -1,0 +1,16 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+  • electron-builder  version=26.18.0 os=6.18.55
+  • loaded configuration  file=/workspace/scratch/9e6525fe7a12/dividimos-offline/electron-builder.yml
+  • author is missed in the package.json  appPackageFile=/workspace/scratch/9e6525fe7a12/dividimos-offline/package.json
+  • skipped dependencies rebuild  reason=npmRebuild is set to false
+  • packaging       platform=win32 arch=x64 electron=45.1.0 appOutDir=release/win-unpacked
+  • downloaded      label=electron progress=100%
+  • downloaded electron zip extracted successfully  output=/workspace/scratch/9e6525fe7a12/dividimos-offline/release/win-unpacked
+  • searching for node modules  pm=npm searchDir=/workspace/scratch/9e6525fe7a12/dividimos-offline
+  • duplicate dependency references  dependencies=["react-dom@19.2.5","prop-types@15.8.1","react-dom@19.2.5","react-resizable@3.1.3","prop-types@15.8.1","react-dom@19.2.5","react-draggable@4.5.0","react-dom@19.2.5","react-dom@19.2.5","react-redux@9.2.0","react-dom@19.2.5","d3-array@3.2.4","d3-interpolate@3.0.1","d3-time@3.1.0","d3-time@3.1.0","d3-array@3.2.4"]
+  • updating asar integrity executable resource  executablePath=release/win-unpacked/DividimOS.exe
+  • default Electron icon is used  reason=application icon is not set
+  • no code signing certificate configured, signing is skipped  path=release/win-unpacked/DividimOS.exe
+  • building        target=portable file=release/DividimOS-1.0.0-Portable.exe archs=x64
+  • no code signing certificate configured, signing is skipped  path=/tmp/t-9KThj7/elevate-staging-1/resources/elevate.exe
+  • no code signing certificate configured, signing is skipped  path=release/DividimOS-1.0.0-Portable.exe

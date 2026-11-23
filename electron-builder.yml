@@ -1,0 +1,23 @@
+appId: br.dividimos.offline
+productName: DividimOS
+asar: true
+directories:
+  output: release
+files:
+  - dist/**/*
+  - desktop/**/*
+  - server/api.cjs
+  - server/storage.cjs
+  - package.json
+  - "!node_modules/**/*"
+win:
+  target:
+    - target: portable
+      arch: [x64]
+  artifactName: DividimOS-${version}-Portable.${ext}
+linux:
+  target:
+    - target: AppImage
+      arch: [x64]
+  category: Office
+  artifactName: DividimOS-${version}-x86_64.${ext}

@@ -1,124 +1,55 @@
-﻿import { supabase } from "./supabaseClient";
-
-export const APP_STATE_ID = "dividimos-main";
-
-export const STORAGE_KEYS = {
-  pessoas: "controle-financeiro:pessoas",
-  gastoDebito: "controle-financeiro:gasto-debito",
-  faturaAtual: "controle-financeiro:fatura-atual",
-  cartoes: "controle-financeiro:cartoes",
-  gastos: "controle-financeiro:gastos",
-  perfilAtivo: "controle-financeiro:perfil-ativo",
-  resetEtapa: "controle-financeiro:reset-etapa",
-  transacoes: "controle-financeiro:transacoes",
-  contas: "controle-financeiro:contas",
-  mesSelecionado: "mesSelecionado",
-  anoSelecionado: "anoSelecionado",
-};
-
+// Local-first storage bridge: keeps compatibility with existing React localStorage keys.
+// In Electron, SQLite is the durable source of truth; no Supabase and no network required.
+export const STORAGE_KEYS = Object.freeze({
+  pessoas: 'controle-financeiro:pessoas',
+  gastoDebito: 'controle-financeiro:gasto-debito',
+  faturaAtual: 'controle-financeiro:fatura-atual',
+  cartoes: 'controle-financeiro:cartoes',
+  gastos: 'controle-financeiro:gastos',
+  perfilAtivo: 'controle-financeiro:perfil-ativo',
+  resetEtapa: 'controle-financeiro:reset-etapa',
+  transacoes: 'controle-financeiro:transacoes',
+  contas: 'controle-financeiro:contas',
+  mesSelecionado: 'mesSelecionado',
+  anoSelecionado: 'anoSelecionado',
+});
 export const STORAGE_KEY_LIST = Object.values(STORAGE_KEYS);
-
 export function collectLocalState() {
-  const state = {};
-
-  for (const key of STORAGE_KEY_LIST) {
-    const value = window.localStorage.getItem(key);
-
-    if (value !== null) {
-      state[key] = value;
-    }
+  const out = {};
+  for (const k of STORAGE_KEY_LIST) {
+    const v = window.localStorage.getItem(k);
+    if (v !== null) out[k] = v;
   }
-
-  return state;
+  return out;
 }
-
 export function restoreLocalState(state) {
-  if (!state || typeof state !== "object") {
-    return;
-  }
-
-  for (const [key, value] of Object.entries(state)) {
-    const keyIsUsedByApp = STORAGE_KEY_LIST.includes(key);
-    const valueIsString = typeof value === "string";
-
-    if (keyIsUsedByApp && valueIsString) {
-      window.localStorage.setItem(key, value);
-    }
+  if (!state || typeof state !== 'object' || Array.isArray(state)) return;
+  // Important: clear absent keys as well after backup restore.
+  for (const k of STORAGE_KEY_LIST) window.localStorage.removeItem(k);
+  for (const [k,v] of Object.entries(state)) {
+    if (STORAGE_KEY_LIST.includes(k) && typeof v === 'string') window.localStorage.setItem(k, v);
   }
 }
-
-export async function loadStateFromCloud() {
-  if (!supabase) {
-    console.warn("Supabase não configurado. Usando apenas localStorage.");
-    return {};
-  }
-
-  const { data, error } = await supabase
-    .from("app_state")
-    .select("data")
-    .eq("id", APP_STATE_ID)
-    .maybeSingle();
-
-  if (error) {
-    throw error;
-  }
-
-  const cloudState = data?.data ?? {};
-
-  if (Object.keys(cloudState).length > 0) {
-    restoreLocalState(cloudState);
-  }
-
-  return cloudState;
+export async function loadStateFromLocal() {
+  if (!window.dividimos?.loadState) return;
+  const data = await window.dividimos.loadState();
+  restoreLocalState(data);
 }
-
-export async function saveStateToCloud() {
-  if (!supabase) {
-    console.warn("Supabase não configurado. Dados salvos apenas localmente.");
-    return;
-  }
-
-  const data = collectLocalState();
-
-  const { error } = await supabase.from("app_state").upsert({
-    id: APP_STATE_ID,
-    data,
-  });
-
-  if (error) {
-    throw error;
-  }
-}
-
-export function installCloudAutosave() {
-  let timeoutId = null;
-
-  function scheduleSave() {
-    window.clearTimeout(timeoutId);
-
-    timeoutId = window.setTimeout(() => {
-      saveStateToCloud().catch((error) => {
-        console.error("Erro ao salvar dados no Supabase:", error);
-      });
-    }, 500);
-  }
-
-  const originalSetItem = Storage.prototype.setItem;
-  const originalRemoveItem = Storage.prototype.removeItem;
-
-  Storage.prototype.setItem = function patchedSetItem(key, value) {
-    originalSetItem.call(this, key, value);
-
-    if (this === window.localStorage && STORAGE_KEY_LIST.includes(key)) {
-      scheduleSave();
+let installed = false;
+export function installLocalAutosave() {
+  if (installed || !window.dividimos?.saveStateSync) return;
+  installed = true;
+  const set = Storage.prototype.setItem;
+  const remove = Storage.prototype.removeItem;
+  function persist(storage, key) {
+    if (storage !== window.localStorage || !STORAGE_KEY_LIST.includes(key)) return;
+    const result = window.dividimos.saveStateSync(collectLocalState());
+    if (!result?.ok) {
+      const message = 'Falha ao salvar. Feche e reabra o aplicativo. ' + (result?.error || 'Erro SQLite');
+      document.getElementById('root')?.replaceChildren(document.createTextNode(message));
+      throw new Error(message);
     }
-  };
-
-  Storage.prototype.removeItem = function patchedRemoveItem(key) {
-    originalRemoveItem.call(this, key);
-
-    if (this === window.localStorage && STORAGE_KEY_LIST.includes(key)) {
-      scheduleSave();
-    }
-  };
+  }
+  Storage.prototype.setItem = function(key,value) { set.call(this,key,value); persist(this,key); };
+  Storage.prototype.removeItem = function(key) { remove.call(this,key); persist(this,key); };
 }
